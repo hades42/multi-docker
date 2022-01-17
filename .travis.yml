@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hades42/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true hades42/react-test npm run test
+
+after-success:
+  - docker build -t hades42/multi-client ./client
+  - docker build -t hades42/multi-nginx ./nginx
+  - docker build -t hades42/multi-server ./server
+  - docker build -t hades42/multi-worker ./worker
+  
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those image and push them to dockerhub
+  - docker push hades42/multi-client
+  - docker push hades42/multi-nginx
+  - docker push hades42/multi-server
+  - docker push hades42/multi-worker
+  
